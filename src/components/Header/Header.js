@@ -1,6 +1,6 @@
 import React from 'react';
 import './Header.css';
-import logo from '../../images/logo.png'
+import logo from '../../images/logo.png';
 
 const Header = () => {
     return (
@@ -9,7 +9,7 @@ const Header = () => {
             <nav className="nav">
                 <a href="/shop" className="link">Shop</a>
                 <a href="/review" className="link">Order Review</a>
-                <a href="manage" className="link">Manage Inventory here</a>
+                <a href="/inventory" className="link">Manage Inventory here</a>
             </nav>
         </div>
     );
