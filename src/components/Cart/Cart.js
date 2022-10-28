@@ -1,7 +1,6 @@
 import React from 'react';
 
 const Cart = (props) => {
-    console.log(props);
     const cart = props.cart;
 
     ///// system 1
