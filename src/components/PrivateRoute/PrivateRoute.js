@@ -8,7 +8,7 @@ export default function PrivateRoute() {
     const [loginUser, setLoginUser] = useContext(UserContext);
     return (
         <div>
-            {loginUser.email ? <Outlet  /> : <Navigate to={{pathname: '/login'}} />};
+            {loginUser.email ? <Outlet  /> : <Navigate to={{pathname: '/login'}} state={true}/>};
         </div>
     )
 }

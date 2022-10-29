@@ -1,13 +1,7 @@
-import { initializeApp } from "firebase/app";
-import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, FacebookAuthProvider, } from "firebase/auth";
-import firebaseConfig from './firebase-config';
 import { useContext, useState } from 'react';
 import { UserContext } from "../../App";
 import { useLocation, useNavigate } from "react-router-dom";
-
-initializeApp(firebaseConfig);
-const provider = new GoogleAuthProvider();
-const fbProvider = new FacebookAuthProvider();
+import { emailPasswordUserCreate, handleFbSignIN, handleGoogleSignIn, handleSignOut, initializeLogin, loginWithEmailPassword } from './loginManager';
 
 function Login() {
     const [newUser, setNewUser] = useState(false);
@@ -21,129 +15,40 @@ function Login() {
         success: false,
     });
 
+    ////////// Initialize from loginManager
+    initializeLogin();
+
     ////// for context state
     const [loginUser, setLoginUser] = useContext(UserContext);
 
     /////////// After login redirect
     const navigate = useNavigate()
     const location = useLocation();
-
-    const {from } = location.state || {from: {pathname: "/"}};
-
-    const auth = getAuth();
-
-    //////// forGoogleSignIn
-    const handleSignin = () => {
-        signInWithPopup(auth, provider)
-            .then(res => {
-                const { photoURL, displayName, email } = res.user;
-
-                setUser({
-                    isSignIn: true,
-                    name: displayName,
-                    email: email,
-                    photo: photoURL
-                });
-            })
-            .catch((error) => {
-                console.log(error);
-            })
-    }
-
-    const handleSignout = () => {
-        signOut(auth)
-            .then(() => {
-                const outUser = {
-                    isSignIn: false,
-                    name: '',
-                    email: '',
-                    photo: '',
-                    password: '',
-                    error: '',
-                    success: '',
-                }
-
-                setUser(outUser);
-            })
-            .catch((err) => {
-                console.log(err);
-            })
-    }
-
-    /////// ForFacebookSignIN
-    const handleFbSignIN = () => {
-        signInWithPopup(auth, fbProvider)
-            .then((res) => {
-                console.log(res.user);
-            })
-            .catch((error) => {
-                console.log(error);
-            });
-    }
+    console.log(location);
+    const { from } = location.state ? {from: {pathname: "/shipment"}} : { from: { pathname: "/" } };
 
     /////// Submit handler
     const handleSubmit = (e) => {
 
         ////////// Sign UP code
         if (newUser && user.name && user.email && user.password) {
-            createUserWithEmailAndPassword(auth, user.email, user.password, user.name)
-                .then((res) => {
-                    const updateSucess = { ...user };
-                    const successMessage = true;
-                    updateSucess.success = successMessage;
-                    updateSucess.error = '';
-
-                    setUser(updateSucess);
-                    updateName(user.name);
+            emailPasswordUserCreate(user.name, user.email, user.password)
+                .then(res => {
+                    setUser(res);
+                    setLoginUser(res);
                 })
-                .catch((error) => {
-                    const userInfo = { ...user };
-                    const errorMessage = error.message;
-                    userInfo.error = errorMessage;
-                    userInfo.success = false;
-
-                    setUser(userInfo);
-                });
         }
 
         if (!newUser && user.email && user.password) {
-            signInWithEmailAndPassword(auth, user.email, user.password)
-                .then((res) => {
-                    const updateSucess = { ...user };
-                    const successMessage = true;
-                    updateSucess.success = successMessage;
-                    updateSucess.error = '';
-
-                    setUser(updateSucess);
-                    setLoginUser(updateSucess);
+            loginWithEmailPassword(user.email, user.password)
+                .then(res => {
+                    setUser(res);
+                    setLoginUser(res);
                     navigate(from);
                 })
-                .catch((error) => {
-                    const userInfo = { ...user };
-                    const errorMessage = error.message;
-                    userInfo.error = errorMessage;
-                    userInfo.success = false;
-
-                    setUser(userInfo);
-                });
         }
         e.preventDefault();
-
-        const updateName = name => {
-            updateProfile(auth.currentUser, {
-                displayName: name,
-            }).then(() => {
-                console.log('Username Update successfully');
-            }).catch((error) => {
-                console.log(error);
-            });
-        }
     }
-
-    ///// Handle change
-    // const handleChange = (e) => {
-    //   console.log(e.target.name, e.target.value);
-    // }
 
     //// handle blur, lekha shes howar por kaj korbe.
     const handleBlur = (e) => {
@@ -167,15 +72,41 @@ function Login() {
         }
     }
 
+    //////// For google signIN
+    const googleSignIn = () => {
+        handleGoogleSignIn()
+            .then(res => {
+                setUser(res);
+                setLoginUser(res);
+            })
+    }
+
+    /////// signOut
+    const googleSignOut = () => {
+        handleSignOut()
+            .then(res => {
+                setUser(res);
+                setLoginUser(res);
+            })
+    }
+
+    ////// facebook signIn
+    const fbSignIN = () => {
+        handleFbSignIN()
+            .then(res => {
+                console.log(res);
+            })
+    }
+
     return (
-        <div style={{textAlign: 'center'}}>
+        <div style={{ textAlign: 'center' }}>
             {
                 user.isSignIn ?
-                    <button onClick={handleSignout}>Sign Out</button> :
-                    <button onClick={handleSignin}>Sign in with google</button>
+                    <button onClick={googleSignOut}>Sign Out</button> :
+                    <button onClick={googleSignIn}>Sign in with google</button>
             }
             <br></br>
-            <button onClick={handleFbSignIN}>Sign in with facebook</button>
+            <button onClick={fbSignIN}>Sign in with facebook</button>
 
             {
                 user.isSignIn && <div>

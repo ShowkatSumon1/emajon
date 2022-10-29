@@ -1,9 +1,17 @@
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, FacebookAuthProvider, } from "firebase/auth";
 import firebaseConfig from './firebase-config';
 import { initializeApp } from "firebase/app";
+import { getFirestore, collection, getDocs  } from 'firebase/firestore'
 
-export const initializeLogin = () => {
-    initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Get a list of cities from your database
+export async function initializeLogin(db) {
+    const citiesCol = collection(db, 'cities');
+    const citySnapshot = await getDocs(citiesCol);
+    const cityList = citySnapshot.docs.map(doc => doc.data());
+    return cityList;
 }
 
 /////// google signIN
@@ -11,18 +19,21 @@ export const initializeLogin = () => {
 const auth = getAuth();
 
 //////// forGoogleSignIn
-export const handleGoogleSignin = () => {
+export const handleGoogleSignIn = () => {
     const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider)
+    return signInWithPopup(auth, provider)
         .then(res => {
             const { photoURL, displayName, email } = res.user;
 
-            setUser({
+            const signInUser = {
                 isSignIn: true,
                 name: displayName,
                 email: email,
-                photo: photoURL
-            });
+                photo: photoURL,
+                success: true,
+            };
+
+            return signInUser;
         })
         .catch((error) => {
             console.log(error);
@@ -30,8 +41,8 @@ export const handleGoogleSignin = () => {
 }
 
 ////////// sign Out
-export const handleSignout = () => {
-    signOut(auth)
+export const handleSignOut = () => {
+    return signOut(auth)
         .then(() => {
             const outUser = {
                 isSignIn: false,
@@ -40,10 +51,10 @@ export const handleSignout = () => {
                 photo: '',
                 password: '',
                 error: '',
-                success: '',
+                success: false,
             }
 
-            setUser(outUser);
+            return outUser;
         })
         .catch((err) => {
             console.log(err);
@@ -53,11 +64,68 @@ export const handleSignout = () => {
 /////// ForFacebookSignIN
 export const handleFbSignIN = () => {
     const fbProvider = new FacebookAuthProvider();
-    signInWithPopup(auth, fbProvider)
-        .then((res) => {
-            console.log(res.user);
+    return signInWithPopup(auth, fbProvider)
+        .then(res => {
+            return res;
         })
         .catch((error) => {
             console.log(error);
         });
+}
+
+
+/////////// User create Email and pass
+
+
+ export const emailPasswordUserCreate = (name, email, password) => {
+    return createUserWithEmailAndPassword(auth, email, password, name)
+        .then((res) => {
+            const updateSucess = res.user;
+            const successMessage = true;
+            updateSucess.success = successMessage;
+            updateSucess.error = '';
+            updateName(name);
+
+            return updateSucess;
+        })
+        .catch((error) => {
+            const userInfo = {};
+            const errorMessage = error.message;
+            userInfo.error = errorMessage;
+            userInfo.success = false;
+            return userInfo;
+        });
+}
+
+export const loginWithEmailPassword = (email, password) => {
+    return signInWithEmailAndPassword(auth, email, password)
+        .then((res) => {
+            const updateSucess = res.user;
+            const successMessage = true;
+            updateSucess.success = successMessage;
+            updateSucess.error = '';
+
+            return updateSucess;
+            // setUser(updateSucess);
+            // setLoginUser(updateSucess);
+            // navigate(from);
+        })
+        .catch((error) => {
+            const userInfo = {};
+            const errorMessage = error.message;
+            userInfo.error = errorMessage;
+            userInfo.success = false;
+
+            return userInfo;
+        });
+}
+
+const updateName = name => {
+    updateProfile(auth.currentUser, {
+        displayName: name,
+    }).then(() => {
+        console.log('Username Update successfully');
+    }).catch((error) => {
+        console.log(error);
+    });
 }
