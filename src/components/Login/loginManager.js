@@ -1,17 +1,10 @@
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, FacebookAuthProvider, } from "firebase/auth";
 import firebaseConfig from './firebase-config';
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, getDocs  } from 'firebase/firestore'
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-// Get a list of cities from your database
-export async function initializeLogin(db) {
-    const citiesCol = collection(db, 'cities');
-    const citySnapshot = await getDocs(citiesCol);
-    const cityList = citySnapshot.docs.map(doc => doc.data());
-    return cityList;
+const app = initializeApp(firebaseConfig)
+export async function initializeLogin() {
+    return app;
 }
 
 /////// google signIN

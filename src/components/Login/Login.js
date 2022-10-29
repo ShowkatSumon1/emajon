@@ -24,7 +24,6 @@ function Login() {
     /////////// After login redirect
     const navigate = useNavigate()
     const location = useLocation();
-    console.log(location);
     const { from } = location.state ? {from: {pathname: "/shipment"}} : { from: { pathname: "/" } };
 
     /////// Submit handler
@@ -38,6 +37,8 @@ function Login() {
                     setLoginUser(res);
                 })
         }
+
+        /////// Login code
 
         if (!newUser && user.email && user.password) {
             loginWithEmailPassword(user.email, user.password)
@@ -78,6 +79,7 @@ function Login() {
             .then(res => {
                 setUser(res);
                 setLoginUser(res);
+                navigate(from);
             })
     }
 
